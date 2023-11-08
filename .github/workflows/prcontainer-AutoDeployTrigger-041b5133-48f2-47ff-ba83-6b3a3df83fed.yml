@@ -1,0 +1,41 @@
+name: Trigger auto deployment for prcontainer
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/prcontainer-AutoDeployTrigger-041b5133-48f2-47ff-ba83-6b3a3df83fed.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.PRCONTAINER_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }} 
+          registryUrl: ca3bc4e989a6acr.azurecr.io
+          registryUsername: ${{ secrets.PRCONTAINER_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.PRCONTAINER_REGISTRY_PASSWORD }}
+          containerAppName: prcontainer
+          resourceGroup: v-pravallika-mindtree
+          imageToBuild: ca3bc4e989a6acr.azurecr.io/prcontainer:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
